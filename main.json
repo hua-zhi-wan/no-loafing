@@ -1,0 +1,9 @@
+{
+    "default": ["default"],
+    "java": ["java"],
+    "js": ["js", "javascript"],
+    "csharp": ["csharp", "cs", "c#"],
+    "cpp": ["cpp", "c++"],
+    "c": ["c"],
+    "python": ["python", "py"]
+}

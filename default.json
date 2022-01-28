@@ -1,0 +1,14 @@
+{
+    "name": "default",
+    "identity": [],
+    "suffix": [
+        "\\.h$", "\\.c(pp)?$", 
+        "\\.java$", "\\.cs$", 
+        "\\.py$", "\\.ipynb$", 
+        "\\.js$", "\\.html?$", "\\.css$", 
+        "\\.rs$", "\\.go$", "\\.kt$"
+    ],
+    "ignore": [
+        "^\\s*$"
+    ]
+}

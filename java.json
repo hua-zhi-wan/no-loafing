@@ -1,0 +1,14 @@
+{
+    "name": "java",
+    "identity": [
+        "\\.java$"
+    ],
+    "suffix": [
+        "\\.java$"
+    ],
+    "ignore": [
+        "^\\s*$",
+        "^\\s*//\\s*$",
+        "^import"
+    ]
+}
