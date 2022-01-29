@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Config</title>
+    <style>
+    * {
+        margin: 0; padding: 0;
+    }
+    body {
+        margin: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        background-color: #202020;
+    }
+    #title {
+        position: relative;
+        display: inline-block;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+    
+        color: white;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 5vw;
+        font-weight: bold;
+    }
+    </style>
+</head>
+<body>
+    <div id="title">No-Loafing<span id="dots"></span></span>
+    <script>
+        var title = document.getElementById("dots");
+        var i = 0;
+        function add_dot() {
+            i += 1;
+            if (i > 3) {
+                i = 0;
+                title.innerHTML = "";
+            }
+            else {
+                title.innerHTML += ".";
+            }
+        }
+        setInterval(add_dot, 500);
+    </script>
+</body>
+</html>
