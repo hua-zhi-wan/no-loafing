@@ -1,4 +1,5 @@
-use std::collections::HashMap;
+#[allow(unused)]
+use std::collections;
 
 use regex::Regex;
 
@@ -78,10 +79,10 @@ pub fn auto_config(name: &str) -> Config {
 
 #[tokio::test]
 pub async fn update_configs() {
-    let response = reqwest::get("https://httpbin.org/ip")
+    let response = reqwest::get("https://hanayabuki.github.io/no-loafing/index.json")
         .await
         .unwrap()
-        .json::<HashMap<String, String>>()
+        .json::<collections::HashMap<String, String>>()
         .await
         .unwrap();
     println!("{:?}", response);

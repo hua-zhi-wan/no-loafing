@@ -13,7 +13,6 @@ fn main() {
             process::exit(0);
         },
         Some(boot) => {
-            // println!("Search from \"{}\" on mode \'{}\'", &boot_args.root_path, &boot_args.config.name);
             let entry_vec = filesys::read_dir_as_entry_vec(&boot);
             let mut i_total = 0;
             for entry in entry_vec {
