@@ -1,25 +1,37 @@
 use std::env;
 
-use crate::config::{self, Config};
 
-pub struct BootArgs {
-    pub root_path: String,
-    pub config: Config,
+pub enum BootArgs {
+    None,
+    Update(String),
+    PathAndLang(String, String)
 }
 
-pub fn get_boot_args() -> Option<BootArgs> {
+pub fn get_boot_args() -> BootArgs {
     let mut args = env::args();
     let size =  args.len();
 
-    match size {
-        2 => Some(BootArgs {
-            root_path: args.next().unwrap(),
-            config: config::auto_config(""),
-        }),
-        3 => Some(BootArgs {
-            root_path: args.next().unwrap(),
-            config: config::auto_config(&args.next().unwrap()),
-        }),
-        _ => None,
+    match args.next().unwrap().as_str() {
+        "update" => {
+            if let Some(url) =  args.next() {
+                return BootArgs::Update(url);
+            }
+            else {
+                return BootArgs::Update(String::from("https://hanayabuki.github.io/no-loafing"));
+            }
+        }
+        _ => {
+            match size {
+                2 => return BootArgs::PathAndLang(
+                    args.next().unwrap(),
+                    String::from("default")
+                ),
+                3 => return BootArgs::PathAndLang(
+                    args.next().unwrap(),
+                    args.next().unwrap()
+                ),
+                _ => return BootArgs::None,
+            }
+        }
     }
 }
