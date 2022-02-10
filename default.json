@@ -1,6 +1,5 @@
 {
     "name": "default",
-    "identity": [],
     "suffix": [
         "\\.h$", "\\.c(pp)?$", 
         "\\.java$", "\\.cs$", 

@@ -1,11 +1,12 @@
 {
-    "name": "java",
+    "name": "csharp",
     "suffix": [
-        "\\.java$"
+        "\\.cs$"
     ],
     "ignore": [
         "^\\s*$",
         "^\\s*//\\s*$",
-        "^import"
+        "^\\s*\\{\\s*$",
+        "^using"
     ]
 }

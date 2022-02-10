@@ -1,0 +1,13 @@
+{
+    "name": "python",
+    "suffix": [
+        "\\.py$"
+    ],
+    "ignore": [
+        "^\\s*$",
+        "^\\s*#\\s*$",
+        "^import",
+        "^from",
+        "^\\s*pass\\s*$"
+    ]
+}
