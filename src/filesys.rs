@@ -8,6 +8,7 @@ use std::path::PathBuf;
 
 use hyper::body::HttpBody;
 use hyper::{Client, Uri};
+use hyper_tls::HttpsConnector;
 
 use crate::config::Config;
 use crate::output::error_handler;
@@ -132,7 +133,7 @@ pub async fn update_configs(uri: &str) {
     
     // Get main.json
     addr.push_str("/main.json");
-    println!("Downloading `main.json` from `{}`...", &uri);
+    println!("Downloading `main.json` from `{}`...", &addr);
     let chunk = get(&addr).await;
     if let Err(err) = &chunk {
         output::error_handler("UPDATE-GET-MAIN", &err.to_string());
@@ -157,7 +158,7 @@ pub async fn update_configs(uri: &str) {
         addr.push('/');
         addr.push_str(&item_file_name);
 
-        println!("Downloading `{}` from `{}`...", &item_file_name, &uri);
+        println!("Downloading `{}` from `{}`...", &item_file_name, &addr);
         let item_resp_json = get(&addr).await;
         if let Err(err) = &item_resp_json {
             error_handler("UPDATE-GET-ITEM", &err.to_string());
@@ -170,8 +171,9 @@ pub async fn update_configs(uri: &str) {
 }
 
 async fn get(uri: &str) -> Result<Vec<u8>, hyper::Error> {
-    let client = Client::new();
-    let uri = uri.parse::<Uri>().unwrap();
+    let https = HttpsConnector::new();
+    let client = Client::builder().build::<_, hyper::Body>(https);
+    let uri = uri.parse::<Uri>().expect("Wrong URI");
     let mut resp = client.get(uri).await.unwrap();
 
     match resp.body_mut().data().await.unwrap() {

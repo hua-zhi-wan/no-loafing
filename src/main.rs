@@ -15,6 +15,7 @@ fn main() {
 
     // Update
     if let BootArgs::Update(url) = boot_args {
+        // Sync
         tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(
             filesys::update_configs(&url)
         );
@@ -35,18 +36,26 @@ fn main() {
 
             let entry_vec = filesys::read_dir_as_entry_vec(&dir, &lang_config);
             let mut i_total = 0;
-            for entry in entry_vec {
-                print!("{:#?}\t", entry.file_name());
+
+            let mut max_len: usize = 0;
+            for entry in entry_vec.iter() {
+                if entry.file_name().is_ascii() && max_len < entry.file_name().len() {
+                    max_len = entry.file_name().len();
+                }
+            }
+
+            for entry in entry_vec.iter() {
+                print!("{:<max_len$}\t", entry.file_name().into_string().unwrap(), max_len = max_len);
                 let (i, i_ig) = filesys::read_file_by_lines(&entry, &lang_config);
                 println!(
-                    "----\t{} line{}. ({} ignored)",
+                    "|{:>5} line{} |{:>4} ignored.",
                     i,
-                    if i > 1 { "s" } else { "" },
+                    if i > 1 {"s."} else {". "},
                     i_ig
                 );
                 i_total += i;
             }
-            println!("{} lines in total.\n", i_total);
+            println!("{} lines in total.", i_total);
         }
         _ => {}
     }
