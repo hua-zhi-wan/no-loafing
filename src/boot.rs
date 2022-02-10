@@ -9,6 +9,7 @@ pub enum BootArgs {
 
 pub fn get_boot_args() -> BootArgs {
     let mut args = env::args();
+    args.next();
     let size =  args.len();
 
     match args.next().unwrap().as_str() {
@@ -17,7 +18,7 @@ pub fn get_boot_args() -> BootArgs {
                 return BootArgs::Update(url);
             }
             else {
-                return BootArgs::Update(String::from("https://hanayabuki.github.io/no-loafing"));
+                return BootArgs::Update(String::from("http://hanayabuki.github.io/no-loafing"));
             }
         }
         _ => {

@@ -8,7 +8,7 @@ pub fn parse_main_config(cfg_info_str: &str) -> (Vec<String>, HashMap<String, St
     let mut lang_vec = Vec::new();
     let mut lang_map = HashMap::new();
     
-    let cfg_info_json = json::parse(&cfg_info_str).unwrap();
+    let cfg_info_json = json::parse(cfg_info_str).unwrap();
 
     if let JsonValue::Object(cfg_info_json) = cfg_info_json {
         for (lang_name, array) in cfg_info_json.iter() {

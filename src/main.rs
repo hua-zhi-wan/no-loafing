@@ -12,19 +12,23 @@ use boot::BootArgs;
 fn main() {
     // Init
     let boot_args = boot::get_boot_args();
+
+    // Update
     if let BootArgs::Update(url) = boot_args {
-        filesys::update_configs(&url);
+        tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(
+            filesys::update_configs(&url)
+        );
         process::exit(0);
     }
     // local load
     let lang_map = filesys::load_config_info().unwrap();
 
-    match boot::get_boot_args() {
-        boot::BootArgs::None => {
+    match boot_args {
+        BootArgs::None => {
             println!("{}", help::HELP_INFO);
             process::exit(0);
         }
-        boot::BootArgs::PathAndLang(dir, lang_tag) => {
+        BootArgs::PathAndLang(dir, lang_tag) => {
             // args operation
             let dir = dir.parse::<PathBuf>().unwrap();
             let lang_config = filesys::load_config_item(&lang_map[&lang_tag]).unwrap();
@@ -44,12 +48,6 @@ fn main() {
             }
             println!("{} lines in total.\n", i_total);
         }
-        boot::BootArgs::Update(url) => {
-
-        }
+        _ => {}
     }
-}
-
-fn error_handler(msg: &str) {
-    eprintln!("{}", &msg);
 }

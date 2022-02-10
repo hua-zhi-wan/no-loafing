@@ -1,15 +1,17 @@
 use std::collections::{VecDeque, HashMap};
-use std::fs;
+use std::fs::{self, File};
 use std::fs::DirEntry;
-use std::io;
+use std::io::{self, Write};
 use std::io::BufRead;
+use std::process;
 use std::path::PathBuf;
 
 use hyper::body::HttpBody;
 use hyper::{Client, Uri};
 
 use crate::config::Config;
-use crate::jsonparser;
+use crate::output::error_handler;
+use crate::{jsonparser, output};
 
 ///
 ///  Read Local Files
@@ -123,19 +125,62 @@ pub fn load_config_item(lang_name: &str) -> Option<Config>{
 
 ///
 /// Get Online Config
-
-pub async fn update_configs(url: &str) {
-    let client = Client::new();
-    let uri = url.parse::<Uri>().unwrap();
-    let mut resp = client.get(uri).await.unwrap();
-    dbg!(&resp);
-
-    while let Some(chunk) = resp.body_mut().data().await {
-        let chunk = chunk.unwrap().to_vec();
-        let strs = String::from_utf8(chunk).unwrap();
-    
-        println!("{}", &strs);
-    }
-
+pub async fn update_configs(uri: &str) {
+    let mut addr = String::from(uri);
     let mut config_path = config_path();
+
+    
+    // Get main.json
+    addr.push_str("/main.json");
+    println!("Downloading `main.json` from `{}`...", &uri);
+    let chunk = get(&addr).await;
+    if let Err(err) = &chunk {
+        output::error_handler("UPDATE-GET-MAIN", &err.to_string());
+        process::exit(0);
+    }
+    let resp_json = String::from_utf8(chunk.unwrap()).unwrap();
+
+    config_path.push("main.json");
+    let mut main_json_file = File::create(&config_path).unwrap();
+    config_path.pop();
+    main_json_file.write_all(resp_json.as_bytes()).unwrap();
+
+    
+    // foreach
+    let (lang_iter, _) = jsonparser::parse_main_config(&resp_json);
+    let lang_iter = lang_iter.iter();
+    for lang_name in lang_iter {
+        let mut item_file_name = String::from(lang_name);
+        item_file_name.push_str(".json");
+
+        addr = String::from(uri);
+        addr.push('/');
+        addr.push_str(&item_file_name);
+
+        println!("Downloading `{}` from `{}`...", &item_file_name, &uri);
+        let item_resp_json = get(&addr).await;
+        if let Err(err) = &item_resp_json {
+            error_handler("UPDATE-GET-ITEM", &err.to_string());
+        }
+
+        config_path.push(&item_file_name);
+        let mut item_json_file = File::create(&config_path).unwrap();
+        item_json_file.write_all(item_resp_json.unwrap().as_slice()).unwrap();
+    }
+}
+
+async fn get(uri: &str) -> Result<Vec<u8>, hyper::Error> {
+    let client = Client::new();
+    let uri = uri.parse::<Uri>().unwrap();
+    let mut resp = client.get(uri).await.unwrap();
+
+    match resp.body_mut().data().await.unwrap() {
+        Ok(resp) => Ok(resp.to_vec()),
+        Err(e) => Err(e)
+    }
+}
+
+#[tokio::test]
+pub async fn test() {
+    update_configs("http://hanayabuki.github.io/no-loafing/main.json").await;
 }
