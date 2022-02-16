@@ -1,3 +1,9 @@
-pub static HELP_INFO : &str = "\
-usage: no-loafing <command> [<args>]\
+pub fn help() {
+    let help_info = "\
+usage:
+    no-loafing <path> [<lang-name>]
+or
+    no-loafing update [<url>]
 ";
+    print!("{}", help_info);
+}

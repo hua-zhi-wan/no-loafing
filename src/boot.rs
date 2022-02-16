@@ -10,7 +10,7 @@ pub enum BootArgs {
 pub fn get_boot_args() -> BootArgs {
     let mut args = env::args();
     let size =  args.len();
-    args.next();
+    args.next().unwrap();
 
     if let Some(argstr) = args.next() {
         match argstr.as_str() {
@@ -22,17 +22,25 @@ pub fn get_boot_args() -> BootArgs {
                     return BootArgs::Update(String::from("https://hanayabuki.github.io/no-loafing"));
                 }
             }
+            "help" => {
+                return BootArgs::None;
+            }
             _ => {
                 match size {
-                    2 => return BootArgs::PathAndLang(
+                    2 => // no-loafing somedir
+                    return BootArgs::PathAndLang(
                         argstr,
                         String::from("default")
                     ),
-                    3 => return BootArgs::PathAndLang(
+                    3 => // no-loafing somedir somepl
+                    return BootArgs::PathAndLang(
                         argstr,
                         args.next().unwrap()
                     ),
-                    _ => return BootArgs::None,
+                    _ => {
+                        eprint!("Error: unexpected usage.");
+                        return BootArgs::None
+                    }
                 }
             }
         }

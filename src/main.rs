@@ -3,7 +3,6 @@ mod config;
 mod filesys;
 mod help;
 mod jsonparser;
-mod output;
 
 use std::{process, path::PathBuf};
 
@@ -22,40 +21,74 @@ fn main() {
         process::exit(0);
     }
     // local load
-    let lang_map = filesys::load_config_info().unwrap();
+    let lang_map = filesys::load_config_info().unwrap_or_else(|err| {
+        eprintln!("Error: opening 'config/main.json' failed.\n\t{}", &err);
+        process::exit(1);
+    });
 
     match boot_args {
         BootArgs::None => {
-            println!("{}", help::HELP_INFO);
+            help::help();
             process::exit(0);
         }
         BootArgs::PathAndLang(dir, lang_tag) => {
             // args operation
-            let dir = dir.parse::<PathBuf>().unwrap();
-            let lang_config = filesys::load_config_item(&lang_map[&lang_tag]).unwrap();
+            let dir = dir.parse::<PathBuf>().unwrap_or_else(|_| {
+                eprintln!("Error: parsing directory '{}' failed.\n\tillegal directory.", &dir);
+                process::exit(2);
+            });
 
-            let entry_vec = filesys::read_dir_as_entry_vec(&dir, &lang_config);
+            let lang_config = filesys::load_config_item(&lang_map[&lang_tag]).unwrap_or_else(|err| {
+                eprintln!("Error: opening 'config/main.json' failed.\n\t{}", &err);
+                process::exit(3);
+            });
+
+            let entry_vec = filesys::read_dir_as_entry_vec(&dir, &lang_config).unwrap_or_else(|err| {
+                eprintln!("Error: opening directory failed.\n\t{}", &err);
+                process::exit(4);
+            });
             let mut i_total = 0;
 
+            let mut file_vec = Vec::new();
             let mut max_len: usize = 0;
-            for entry in entry_vec.iter() {
-                if entry.file_name().is_ascii() && max_len < entry.file_name().len() {
-                    max_len = entry.file_name().len();
-                }
-            }
+            let mut max_width_1 = 0;
+            let mut max_width_2 = 0;
 
             for entry in entry_vec.iter() {
-                print!("{:<max_len$}\t", entry.file_name().into_string().unwrap(), max_len = max_len);
                 let (i, i_ig) = filesys::read_file_by_lines(&entry, &lang_config);
-                println!(
-                    "|{:>5} line{} |{:>4} ignored.",
-                    i,
-                    if i > 1 {"s."} else {". "},
-                    i_ig
+
+                let item = (
+                    entry.file_name().into_string().unwrap_or_else(|osstr| {
+                        format!("{:?}", osstr)
+                    }),
+                    i.to_string(),
+                    i_ig.to_string(),
                 );
+
+                if max_len < entry.file_name().len() {
+                    max_len = entry.file_name().len();
+                }
+                max_width_1 = if max_width_1 > item.1.len() { max_width_1 } else { item.1.len() };
+                max_width_2 = if max_width_2 > item.2.len() { max_width_2 } else { item.2.len() };
+                
+                file_vec.push(item);
                 i_total += i;
             }
-            println!("{} lines in total.", i_total);
+
+            for file_info in file_vec {
+                println!(
+                    " {:<max_len$}\t| {:>max_width_1$} lines. | {:>max_width_2$} ignored.", 
+                    file_info.0, 
+                    file_info.1, 
+                    file_info.2,
+
+                    max_len = max_len,
+                    max_width_1 = max_width_1 as usize,
+                    max_width_2 = max_width_2 as usize,
+                );
+            }
+
+            println!("\n {} lines in total.", i_total);
         }
         _ => {}
     }

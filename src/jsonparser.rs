@@ -4,7 +4,7 @@ use json::JsonValue;
 use crate::config::Config;
 
 
-pub fn parse_main_config(cfg_info_str: &str) -> (Vec<String>, HashMap<String, String>) {
+pub fn parse_main_config(cfg_info_str: &str) -> Option<(Vec<String>, HashMap<String, String>)> {
     let mut lang_vec = Vec::new();
     let mut lang_map = HashMap::new();
     
@@ -25,18 +25,17 @@ pub fn parse_main_config(cfg_info_str: &str) -> (Vec<String>, HashMap<String, St
         }
     }
 
-    (lang_vec, lang_map)
+    Some((lang_vec, lang_map))
 }
 
-pub fn parse_config_item(cfg_info_str: &str) -> Option<Config> {
+pub fn parse_config_item(cfg_info_str: &str) -> Result<Config, &'static str> {
     let cfg_info_json = json::parse(&cfg_info_str).unwrap();
 
-    let this_name;
-    let mut this_suffix = Vec::new();
-    let mut this_ignore = Vec::new();
-
     if let JsonValue::Object(json) = cfg_info_json {
-        this_name = json.get("name").unwrap().as_str().unwrap();
+        let this_name = json.get("name").unwrap().as_str().unwrap();
+        let mut this_suffix = Vec::new();
+        let mut this_ignore = Vec::new();
+
         if let JsonValue::Array(json) = json.get("suffix").unwrap() {
             for item in json.iter() {
                 if let JsonValue::Short(item) = item {
@@ -52,10 +51,10 @@ pub fn parse_config_item(cfg_info_str: &str) -> Option<Config> {
             }
         }
 
-        return Some(
+        return Ok(
             Config::new(this_name, this_suffix, this_ignore)
         )
     }
 
-    None
+    Err("")
 }
