@@ -14,10 +14,10 @@ impl Config {
         let mut _suffix = Vec::new();
         let mut _ignore = Vec::new();
         for item in suffix {
-            _suffix.push(Regex::new(&item).expect("Wrong Regex in Suffix."));
+            _suffix.push(Regex::new(item).expect("Wrong Regex in Suffix."));
         }
         for item in ignore {
-            _ignore.push(Regex::new(&item).expect("Wrong Regex in Ignore."));
+            _ignore.push(Regex::new(item).expect("Wrong Regex in Ignore."));
         }
 
         Config {

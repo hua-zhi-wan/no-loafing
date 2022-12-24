@@ -62,7 +62,7 @@ fn main() {
             let mut max_width_2 = 0;
 
             for entry in entry_vec.iter() {
-                let (i, i_ig) = filesys::read_file_by_lines(&entry, &lang_config);
+                let (i, i_ig) = filesys::read_file_by_lines(entry, &lang_config);
 
                 let item = (
                     entry

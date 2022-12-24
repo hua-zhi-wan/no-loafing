@@ -28,7 +28,7 @@ pub fn parse_main_config(cfg_info_str: &str) -> Option<(Vec<String>, HashMap<Str
 }
 
 pub fn parse_config_item(cfg_info_str: &str) -> Result<Config, &'static str> {
-    let cfg_info_json = json::parse(&cfg_info_str).unwrap();
+    let cfg_info_json = json::parse(cfg_info_str).unwrap();
 
     if let JsonValue::Object(json) = cfg_info_json {
         let this_name = json.get("name").unwrap().as_str().unwrap();

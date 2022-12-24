@@ -3,7 +3,7 @@ use std::fs::DirEntry;
 use std::fs::{self, DirBuilder, File};
 use std::io::BufRead;
 use std::io::{self, Write};
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 use std::process;
 
 use hyper::body::HttpBody;
@@ -17,7 +17,7 @@ use crate::jsonparser;
 ///  Read Local Files
 
 pub fn read_dir_as_entry_vec(
-    root_path: &PathBuf,
+    root_path: &Path,
     config: &Config,
 ) -> Result<Vec<DirEntry>, &'static str> {
     let read_dir = fs::read_dir(root_path).expect("Wrong Path.");
@@ -26,7 +26,7 @@ pub fn read_dir_as_entry_vec(
     let mut queue = VecDeque::new();
     queue.push_back(read_dir);
     while let Some(mut dir) = queue.pop_front() {
-        while let Some(entry) = dir.next() {
+        for entry in dir.by_ref() {
             let entry = entry.unwrap();
             let file_type = entry.file_type().unwrap();
             if file_type.is_dir() {
@@ -87,7 +87,7 @@ fn config_path() -> PathBuf {
     let mut addr = std::env::current_exe().unwrap();
     addr.pop();
     addr.push("config");
-    if let Ok(_) = DirBuilder::new().create(&addr) {
+    if DirBuilder::new().create(&addr).is_ok() {
         println!("New Config Directory.")
     }
 
@@ -107,9 +107,9 @@ pub fn load_config_info() -> Result<HashMap<String, String>, &'static str> {
 
     let cfg_info_str = cfg_info_str.unwrap();
     if let Some((_lang_vec, lang_map)) = jsonparser::parse_main_config(&cfg_info_str) {
-        return Ok(lang_map);
+        Ok(lang_map)
     } else {
-        return Err("couldn't parse json.");
+        Err("couldn't parse json.")
     }
 }
 
@@ -121,12 +121,12 @@ pub fn load_config_item(lang_name: &str) -> Result<Config, &'static str> {
 
     if let Ok(cfg_info_str) = fs::read_to_string(&cfg_path) {
         let json_item = jsonparser::parse_config_item(&cfg_info_str);
-        return match json_item {
+        match json_item {
             Ok(item) => Ok(item),
             Err(_err) => Err("Cannot parse json."),
-        };
+        }
     } else {
-        return Err("Cannot open file.");
+        Err("Cannot open file.")
     }
 }
 
