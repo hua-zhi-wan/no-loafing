@@ -4,7 +4,7 @@ mod filesys;
 mod help;
 mod jsonparser;
 
-use std::{process, path::PathBuf};
+use std::{path::PathBuf, process};
 
 use boot::BootArgs;
 
@@ -15,9 +15,11 @@ fn main() {
     // Update
     if let BootArgs::Update(url) = boot_args {
         // Sync
-        tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(
-            filesys::update_configs(&url)
-        );
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(filesys::update_configs(&url));
         process::exit(0);
     }
     // local load
@@ -34,19 +36,24 @@ fn main() {
         BootArgs::PathAndLang(dir, lang_tag) => {
             // args operation
             let dir = dir.parse::<PathBuf>().unwrap_or_else(|_| {
-                eprintln!("Error: parsing directory '{}' failed.\n\tillegal directory.", &dir);
+                eprintln!(
+                    "Error: parsing directory '{}' failed.\n\tillegal directory.",
+                    &dir
+                );
                 process::exit(2);
             });
 
-            let lang_config = filesys::load_config_item(&lang_map[&lang_tag]).unwrap_or_else(|err| {
-                eprintln!("Error: opening 'config/main.json' failed.\n\t{}", &err);
-                process::exit(3);
-            });
+            let lang_config =
+                filesys::load_config_item(&lang_map[&lang_tag]).unwrap_or_else(|err| {
+                    eprintln!("Error: opening 'config/main.json' failed.\n\t{}", &err);
+                    process::exit(3);
+                });
 
-            let entry_vec = filesys::read_dir_as_entry_vec(&dir, &lang_config).unwrap_or_else(|err| {
-                eprintln!("Error: opening directory failed.\n\t{}", &err);
-                process::exit(4);
-            });
+            let entry_vec =
+                filesys::read_dir_as_entry_vec(&dir, &lang_config).unwrap_or_else(|err| {
+                    eprintln!("Error: opening directory failed.\n\t{}", &err);
+                    process::exit(4);
+                });
             let mut i_total = 0;
 
             let mut file_vec = Vec::new();
@@ -58,9 +65,10 @@ fn main() {
                 let (i, i_ig) = filesys::read_file_by_lines(&entry, &lang_config);
 
                 let item = (
-                    entry.file_name().into_string().unwrap_or_else(|osstr| {
-                        format!("{:?}", osstr)
-                    }),
+                    entry
+                        .file_name()
+                        .into_string()
+                        .unwrap_or_else(|osstr| format!("{:?}", osstr)),
                     i.to_string(),
                     i_ig.to_string(),
                 );
@@ -68,20 +76,27 @@ fn main() {
                 if max_len < entry.file_name().len() {
                     max_len = entry.file_name().len();
                 }
-                max_width_1 = if max_width_1 > item.1.len() { max_width_1 } else { item.1.len() };
-                max_width_2 = if max_width_2 > item.2.len() { max_width_2 } else { item.2.len() };
-                
+                max_width_1 = if max_width_1 > item.1.len() {
+                    max_width_1
+                } else {
+                    item.1.len()
+                };
+                max_width_2 = if max_width_2 > item.2.len() {
+                    max_width_2
+                } else {
+                    item.2.len()
+                };
+
                 file_vec.push(item);
                 i_total += i;
             }
 
             for file_info in file_vec {
                 println!(
-                    " {:<max_len$}\t| {:>max_width_1$} lines. | {:>max_width_2$} ignored.", 
-                    file_info.0, 
-                    file_info.1, 
+                    " {:<max_len$}\t| {:>max_width_1$} lines. | {:>max_width_2$} ignored.",
+                    file_info.0,
+                    file_info.1,
                     file_info.2,
-
                     max_len = max_len,
                     max_width_1 = max_width_1 as usize,
                     max_width_2 = max_width_2 as usize,

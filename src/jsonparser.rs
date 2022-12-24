@@ -1,19 +1,18 @@
-use std::collections::HashMap;
 use json::JsonValue;
+use std::collections::HashMap;
 
 use crate::config::Config;
-
 
 pub fn parse_main_config(cfg_info_str: &str) -> Option<(Vec<String>, HashMap<String, String>)> {
     let mut lang_vec = Vec::new();
     let mut lang_map = HashMap::new();
-    
+
     let cfg_info_json = json::parse(cfg_info_str).unwrap();
 
     if let JsonValue::Object(cfg_info_json) = cfg_info_json {
         for (lang_name, array) in cfg_info_json.iter() {
             // load supported langs
-            if let JsonValue::Array(array) = array { 
+            if let JsonValue::Array(array) = array {
                 for item in array {
                     if let JsonValue::Short(item) = item {
                         lang_map.insert(String::from(item.as_str()), String::from(lang_name));
@@ -51,9 +50,7 @@ pub fn parse_config_item(cfg_info_str: &str) -> Result<Config, &'static str> {
             }
         }
 
-        return Ok(
-            Config::new(this_name, this_suffix, this_ignore)
-        )
+        return Ok(Config::new(this_name, this_suffix, this_ignore));
     }
 
     Err("")

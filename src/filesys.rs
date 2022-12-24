@@ -1,22 +1,25 @@
-use std::collections::{VecDeque, HashMap};
-use std::fs::{self, File, DirBuilder};
+use std::collections::{HashMap, VecDeque};
 use std::fs::DirEntry;
-use std::io::{self, Write};
+use std::fs::{self, DirBuilder, File};
 use std::io::BufRead;
-use std::process;
+use std::io::{self, Write};
 use std::path::PathBuf;
+use std::process;
 
 use hyper::body::HttpBody;
 use hyper::{Client, Uri};
 use hyper_tls::HttpsConnector;
 
 use crate::config::Config;
-use crate::{jsonparser};
+use crate::jsonparser;
 
 ///
 ///  Read Local Files
 
-pub fn read_dir_as_entry_vec(root_path: &PathBuf, config: &Config) -> Result<Vec<DirEntry>, &'static str> {
+pub fn read_dir_as_entry_vec(
+    root_path: &PathBuf,
+    config: &Config,
+) -> Result<Vec<DirEntry>, &'static str> {
     let read_dir = fs::read_dir(root_path).expect("Wrong Path.");
     let mut file_vec = Vec::new();
 
@@ -91,7 +94,7 @@ fn config_path() -> PathBuf {
     addr
 }
 
-pub fn load_config_info() -> Result<HashMap<String, String>, &'static str>{
+pub fn load_config_info() -> Result<HashMap<String, String>, &'static str> {
     // get config path
     let mut cfg_path = config_path();
     cfg_path.push("main.json");
@@ -105,30 +108,27 @@ pub fn load_config_info() -> Result<HashMap<String, String>, &'static str>{
     let cfg_info_str = cfg_info_str.unwrap();
     if let Some((_lang_vec, lang_map)) = jsonparser::parse_main_config(&cfg_info_str) {
         return Ok(lang_map);
-    }
-    else {
-        return Err("couldn't parse json.")
+    } else {
+        return Err("couldn't parse json.");
     }
 }
 
-pub fn load_config_item(lang_name: &str) -> Result<Config, &'static str>{
+pub fn load_config_item(lang_name: &str) -> Result<Config, &'static str> {
     let mut cfg_path = config_path();
     let mut file_name = String::from(lang_name);
     file_name.push_str(".json");
     cfg_path.push(file_name);
-    
+
     if let Ok(cfg_info_str) = fs::read_to_string(&cfg_path) {
         let json_item = jsonparser::parse_config_item(&cfg_info_str);
         return match json_item {
             Ok(item) => Ok(item),
-            Err(_err) => Err("Cannot parse json.")
-        }
-    }
-    else {
+            Err(_err) => Err("Cannot parse json."),
+        };
+    } else {
         return Err("Cannot open file.");
     }
 }
-
 
 ///
 /// Get Online Config
@@ -138,9 +138,11 @@ pub async fn update_configs(uri: &str) {
 
     // Get main.json
     addr.push_str("/main.json");
-    println!("Downloading `main.json` from `{}`...", &addr);
+    println!("Updating Config from `{}`", &addr);
+    println!("Downloading `main.json`...");
     let chunk = get(&addr).await;
     if let Err(err) = &chunk {
+        eprintln!("{}", &err);
         process::exit(0);
     }
     let resp_json = String::from_utf8(chunk.unwrap()).unwrap();
@@ -150,7 +152,6 @@ pub async fn update_configs(uri: &str) {
     config_path.pop();
     main_json_file.write_all(resp_json.as_bytes()).unwrap();
 
-    
     // foreach
     let (lang_iter, _) = jsonparser::parse_main_config(&resp_json).unwrap();
     let lang_iter = lang_iter.iter();
@@ -162,15 +163,18 @@ pub async fn update_configs(uri: &str) {
         addr.push('/');
         addr.push_str(&item_file_name);
 
-        println!("Downloading `{}` from `{}`...", &item_file_name, &addr);
+        println!("Downloading `{}`...", &item_file_name);
         let item_resp_json = get(&addr).await;
         if let Err(err) = &item_resp_json {
+            eprintln!("{}", &err);
         }
 
         config_path.push(&item_file_name);
         let mut item_json_file = File::create(&config_path).unwrap();
         config_path.pop();
-        item_json_file.write_all(item_resp_json.unwrap().as_slice()).unwrap();
+        item_json_file
+            .write_all(item_resp_json.unwrap().as_slice())
+            .unwrap();
     }
 
     println!("DONE!");
@@ -184,6 +188,6 @@ async fn get(uri: &str) -> Result<Vec<u8>, hyper::Error> {
 
     match resp.body_mut().data().await.unwrap() {
         Ok(resp) => Ok(resp.to_vec()),
-        Err(e) => Err(e)
+        Err(e) => Err(e),
     }
 }

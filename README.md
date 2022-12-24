@@ -7,3 +7,12 @@ Code line count tool.
 It can reasonably count the effective code in the whole project based on the language used in your project.
 
 The specific statistical rules will exist here `config` branch of the project. And you users can update it manually by using shell tools.
+
+## Usage
+
+```sh
+usage:
+    no-loafing <path> [<lang-name>]
+or
+    no-loafing update [<url>]
+```
